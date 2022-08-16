@@ -27,7 +27,10 @@ class TrackingInfo(dict):
                  location:          typing.Optional[str] = None,
                  delivery_detail:   typing.Optional[str] = None,
                  service:           typing.Optional[str] = None,
-                 link:              typing.Optional[str] = None):
+                 link:              typing.Optional[str] = None,
+                 weight:            typing.Optional[float] = None,
+                 pickup_dt:         typing.Optional[datetime.datetime] = None,
+                 current_status:    typing.Optional[str] = None):
 
         self.events = []
 
@@ -36,6 +39,10 @@ class TrackingInfo(dict):
         self.status = status
         self.last_update = last_update
         self.link = link
+        self.weight = weight
+        self.pickup_dt = pickup_dt
+        self.current_status = current_status
+
 
         # last known location
         self.location = location
@@ -45,18 +52,23 @@ class TrackingInfo(dict):
 
         # service type, i.e. FedEx Ground, UPS Basic, etc.
         self.service = service
+        
+        
 
 
     def __repr__(self):
         ddate = ldate = None
+        pickup_dt, dropoff_dt = None, None
         if self.delivery_date:
             ddate = self.delivery_date.strftime(DATE_FORMAT)
         if self.last_update:
             ldate = self.last_update.strftime(DATE_FORMAT)
+        if self.pickup_dt:
+            pickup_dt = self.pickup_dt.strftime(DATE_FORMAT)
 
         # return slightly different info if it's delivered
         if self.status == 'DELIVERED':
-            return ('<TrackingInfo(service=%r, num=%r, delivery_date=%r, status=%r, location=%r, detail=%r)>' %
+            return ('<TrackingInfo(service=%r, num=%r, delivery_date=%r, status=%r, location=%r, detail=%r, weight=%r, pickup_dt=%r, current_status=%r)>' %
                     (
                         self.service,
                         self.tracking_number,
@@ -64,9 +76,12 @@ class TrackingInfo(dict):
                         self.status,
                         self.location,
                         self.delivery_detail,
+                        self.weight,
+                        pickup_dt,
+                        self.current_status
                     ))
         else:
-            return ('<TrackingInfo(service=%r, num=%r, delivery_date=%r, status=%r, last_update=%r, location=%r)>' %
+            return ('<TrackingInfo(service=%r, num=%r, delivery_date=%r, status=%r, last_update=%r, location=%r, weight=%r, pickup_dt=%r, current_status=%r)>' %
                     (
                         self.service,
                         self.tracking_number,
@@ -74,6 +89,9 @@ class TrackingInfo(dict):
                         self.status,
                         ldate,
                         self.location,
+                        self.weight,
+                        pickup_dt,
+                        self.current_status
                     ))
 
 

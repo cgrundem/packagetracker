@@ -180,6 +180,15 @@ class UPSInterface(BaseInterface):
         else:
             raise TrackFailed(error_msg)
 
+    def _get_pickup_and_dropoff_dates(self, activities):
+        pickup, dropoff = None, None
+        for activity in activities:
+            if "Status" in activity and "Code" in activity["Status"]:
+                if activity["Status"]["Code"] == "XD":
+                    pickup = activity["Date"]
+                if activity["Status"]["Code"] == "9E":
+                    dropoff = activity["Date"]
+        return pickup, dropoff
 
     def _parse_response(self, rsp, tracking_number):
         # parse a good response
@@ -203,6 +212,7 @@ class UPSInterface(BaseInterface):
 
 
         package = root['Shipment']['Package']
+        
 
         # make activites a list if it's not already
         if type(package['Activity']) != list:
@@ -210,6 +220,12 @@ class UPSInterface(BaseInterface):
 
         # this is the last activity, the one we get status info from
         activity = package['Activity'][0]
+        current_status = package['Activity'][0]['Status']['Description'] if 'Status' in package['Activity'][0] and 'Description' in package['Activity'][0]['Status'] else None
+        
+        weight = package['PackageWeight']['Weight'] if 'PackageWeight' in package and 'Weight' in package['PackageWeight'] else None
+        pickup, dropoff = self._get_pickup_and_dropoff_dates(package['Activity'])
+        pickup = datetime.strptime(pickup, "%Y%m%d").date() if pickup else None
+        dropoff = datetime.strptime(dropoff, "%Y%m%d").date() if dropoff else None
 
         # here's the status code, inside the Activity block
         status = activity['Status']['Description']
@@ -277,6 +293,9 @@ class UPSInterface(BaseInterface):
             delivery_detail = delivery_detail,
             service         = service_description,
             link            = LINKROOT.format(tracknum = tracking_number),
+            weight = weight,
+            pickup_dt=pickup,
+            current_status=current_status
         )
 
 
